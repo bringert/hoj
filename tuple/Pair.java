@@ -24,7 +24,7 @@ public class Pair <A,B> implements Tuple {
     * Creates a new pair.
     *
     * @param fst The first component.
-    * @param fst The second component.
+    * @param snd The second component.
     */
    public Pair (A fst, B snd) {
       this.fst = fst;
