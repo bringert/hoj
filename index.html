@@ -1,0 +1,206 @@
+<html>
+<head>
+<title>HOJ - Higher-Order Java</title>
+</head>
+<body>
+
+<h2>HOJ - Higher-Order Java</h2>
+
+<p>We present a library that adds curried higher order functions and tuple 
+types to Generic Java.</p>
+
+<p>Many of these ideas are taken from the functional programming
+language <a href="http://www.haskell.org/">Haskell</a>.</p>
+
+<h3>Library contents</h3>
+
+<h4>Curried higher-order functions</h4>
+
+<p>If we have a type for functions, we can define higher-order functions
+such as map, filter, foldr, foldl, zipWith, curry, uncurry, flip. We can
+provide partial application.</p>
+
+<p>In HOJ, functions are curried, that is, a n-argument function is
+defined as a one-argument function that returns a (n-1)-argument
+function. Unary (one-argument) functions are represented by the class
+Fun&lt;A,B&gt;. Binary (two-argument) functions are represented
+by the class Fun2&lt;A,B,C&gt;, which extends 
+Fun&lt;A,Fun&lt;B,C&gt;&gt;.</p>
+
+<p>Functions can be applied using their apply() method. If apply() is called 
+with fewer arguments that the arity of the function, a new function is 
+returned. There are several method declared 
+for functions. Examples include compose(), which composes to functions
+to a new function, flip() which reverses the order in which a binary
+function takes its arguments and map() which applies a function to all
+elements of iterator, returning a new iterator.</p>
+
+<p>Basic functions such as Id (the identity function) and Const (a
+constant function) are supplied.</p>
+
+<h4>Tuples</h4>
+
+<p>We often need pairs (or triples, quads etc.), for things like symbol table
+entries and coordinates.</p>
+
+<p>The library contains classes such as Pair, the 2-tuple, and Triple,
+the 3-tuple, (and Unit, the 0-tuple, and Cell, the 1-tuple). The tuple
+classes also contain static functions such as zip (turns a tuple of
+collections into a collection of tuples.)</p>
+
+<p>All tuple classes are immutable, as it simplifies concurrent 
+programming, and no compelling arguments for making them mutable has
+been found.</p>
+
+<h3>Examples</h3>
+
+<h4>grep</h4>
+
+<p>This is a simple <tt>grep</tt>-like utility that prints all lines
+from System.in that matches a pattern given on the command line.</p>
+
+<pre>
+import java.util.regex.*;
+
+import io.*;
+import fun.*;
+import static fun.Filter.*;
+import static fun.Compose.*;
+import static fun.TakeWhile.*;
+import static fun.Not.*;
+import static fun.Eq.*;
+
+
+/**
+ * Prints lines from System.in that that match a given regexp.
+ */
+public class Grep {
+   private static class Match extends Fun2&lt;Matcher,String,Boolean&gt; {
+      public Boolean apply(Matcher matcher, String s) {
+         return Boolean.valueOf(matcher.reset(s).matches());
+      }
+   }
+
+   public static void main(String[] args) {
+      Matcher matcher = Pattern.compile(".*"+args[0]+".*").matcher("");
+      new Println<String>(System.out).map(
+         filter(new Match().apply(matcher), 
+                takeWhile(compose(not(), eq(null)), 
+                          new ReadLine(System.in).repeat())));
+   }
+}
+</pre>
+
+<h4>Radix.java from Pizza</h4>
+
+<p>
+Example 3.1 from "Pizza into Java: Translating theory into practise"
+by Martin Odersky and Philip Walder, rewritten using HOJ.
+</p>
+
+<pre>
+import fun.Fun;
+
+class Radix {
+   int n = 0;
+   Fun&lt;Character,Boolean&gt; radix(final int r) {
+      return new Fun&lt;Character,Boolean&gt; () {
+         public Boolean apply(Character c) {
+            n++;
+            return new Boolean('0' &lt;= c.charValue() 
+                               && c.charValue() &lt; '0'+r);
+         }
+      };
+   }
+   String test() {
+      Fun&lt;Character,Boolean&gt; f = radix(8);
+      return f.apply(new Character('0'))+" "+f.apply(new Character('9'))+" "+n;
+   }
+}
+</pre>
+
+<p>The original example (written in Pizza) is:</p>
+
+<pre>
+class Radix {
+   int n = 0;
+   (char)-&gt;boolean radix(int r) {
+      return fun (char c)-&gt;boolean {
+            n++; return '0' &lt;= c && c &lt; '0'+r;
+      };
+   }  
+   String test () {
+      (char)-&gt;boolean f = radix(8);
+      return f('0')+" "+f('9')+" "+n;
+   }
+}
+</pre>
+
+<h3>Platform</h3>
+
+<p>
+The library is intended to be used with the version of
+Java programming language supported by the 
+<a href="http://java.sun.com/j2se/1.5.0/">Java 1.5.0</a>
+release.
+</p>
+
+<h3>Documentation</h3>
+
+<p>I gave a short <a href="hoj-topics-pres.pdf">presentation on HOJ</a>
+in the Topics in Computer Languages class.</p>
+
+<h3>Related work</h3>
+
+<p>
+JGA (Java Generic Algorithms),
+<a
+href="http://jga.sourceforge.net/">http://jga.sourceforge.net/</a>,
+contains classes for unary and binary functions. The functions are not
+curried and there are few higher order functions defined.
+</p>
+
+<p>
+Pizza into Java: Translating Theory into Practice, M. Odersky and P. Wadler, 
+1997. Available online at: 
+<a href="http://pizzacompiler.sourceforge.net/doc/pizza-language-spec.pdf">http://pizzacompiler.sourceforge.net/doc/pizza-language-spec.pdf</a>. 
+The Pizza language extends Java to add genericity, higher-order functions
+and algebraic types. The main difference between the higher-order functions
+in Pizza and those in HOJ is that Pizza requires syntax extensions to Java,
+whereas HOJ is a library. Also Pizza's funcions does not seem to be curried.
+The genericity in Generic Java is based on that in Pizza.
+</p>
+
+<h3>Author</h3>
+
+<p>Bjorn Bringert, <a href="bjorn@bringert.net">bjorn@bringert.net</a>.</p>
+
+<h3>References</h3>
+
+<ul>
+
+<li>
+Making the future safe for the past: Adding Genericity to the Java Programming Language, Gilad Bracha, Martin Odersky, David Stoutamire, and Philip Wadler. OOPSLA 98, Vancouver, October 1998. Available online at:
+<a href="http://www.research.avayalabs.com/user/wadler/gj/Documents/gj-oopsla.pdf">http://www.research.avayalabs.com/user/wadler/gj/Documents/gj-oopsla.pdf</a>.</li>
+
+<li>JGA, Java Generic Algorithms, 
+<a
+href="http://jga.sourceforge.net/">http://jga.sourceforge.net/</a>,
+contains classes for (uncurried) unary and binary functions.
+</li>
+
+<li>Computer Science: Abstraction to Implementation,
+<a
+href="http://www.cs.hmc.edu/claremont/keller/webBook/">http://www.cs.hmc.edu/claremont/keller/webBook/</a>,
+briefly mentions making functions objects (section 7.23).</li>
+
+<li>The Haskell 98 Language Report, 
+<a
+href="http://www.haskell.org/onlinereport/">http://www.haskell.org/onlinereport/</a>,
+defines the Haskell 98 programming language.
+</li>
+
+</ul>
+
+</body>
+</html>
