@@ -1,0 +1,209 @@
+\documentclass{article}
+
+\usepackage{fancyvrb}
+
+\begin{document}
+
+\title{Higher-Order Java}
+
+\author{Bj\"orn Bringert \\
+bjorn@bringert.net \\
+Chalmers University of Technology}
+
+\date{May, 2004}
+
+\maketitle
+
+\begin{abstract}
+We present a library for curried higher-order functions in Generic Java.
+\end{abstract}
+
+\section{Introduction}
+In ``Why Functional Programming Matters'' \cite{hughes:matters-cj}, 
+John Hughes demonstrates that functional languages offer possibilites
+for modularization that are not found in in conventional languages.
+One of the most important of these features is support for 
+higher-order functions. 
+
+In this paper, we demonstrate that typed curried higher-order functions can be
+implemented as a library in Java extended with only polymorphic polymorphism.
+The 1.5 version of the Java language will feature such an extension.
+
+\section{Related work}
+
+Pizza \cite{odersky97pizza} added parametric polymorphism, 
+higher-order functions and algebraic data types to the Java 
+programming language \cite{java}. These features are implemented by extending
+Java's syntax and semantics. Pizza's higher-order functions are not 
+curried.
+
+Generic Java \cite{gj} is based on Pizza, but it only adds parametric
+polymorphism, or genericity. The focus of Generic Java is to provide
+support for genericity without breaking compatibility with non-generic
+code and existing Java Virtual Machines. The library described in this
+paper was developed with the version of Generic Java supported by
+Sun's prototype compiler with generics.
+
+The curried higher-order functions described in the paper were modelled
+on those supported by Haskell \cite{haskell98revised}. 
+
+\section{Curried higher-order functions}
+
+Methods in Java and the higher-order functions in Pizza have non-curried
+types:
+
+\begin{displaymath}
+(t_1, \cdots, t_n) -> t
+\end{displaymath}
+
+In HOJ, functions are curried, that is, they have types:
+
+\begin{displaymath}
+t_1 -> \cdots t_n -> t
+\end{displaymath}
+
+This means that functions can be partially applied. For example, a two-argument
+function can be applied to one argument, yielding a one-argument function.
+
+
+\section{Implementation}
+
+\subsection{Basics}
+
+Simple one-argument functions are represented by the Fun<A,B> class.
+The A parameter is the argument type and B is the return type.
+
+\begin{Verbatim}
+public abstract class Fun<A,B> {
+   public abstract B apply (A x);
+}
+\end{Verbatim}
+
+The apply method is implemented bu concrete functions and contains
+the code for the function.
+
+The base class for N-argument functions extends the one for
+N-1-argument functions. This example shows the Fun2 class:
+
+\begin{Verbatim}
+public abstract class Fun2<A,B,C> extends Fun<A,Fun<B,C>> {
+
+	public Fun<B,C> apply (final A x) {
+		return new Fun<B,C>() {
+			public C apply (B y) {
+				return Fun2.this.apply(x, y);
+			}
+		};
+	}
+
+	public abstract C apply (A x, B y);
+}
+\end{Verbatim}
+
+
+Each new arity adds an abstract apply method which will do the actual work.
+The apply method from the parent class is implemented and creates a
+closure which applies the abstract method to the given argument.
+
+
+\subsection{Using higher-order functions}
+
+Now that we have higher-order functions, we can define common functions
+such as $map : (a \rightarrow b) \rightarrow [a] \rightarrow [b]$, 
+which takes a function and a list and returns the list 
+formed by applying the function to each element in the list. 
+We use the Iterator interface to represent lists. 
+
+\begin{Verbatim}
+public static <A,B> Iterator<B> map(Fun<A,B> f, Iterator<? extends A> xs) {
+  LinkedList<B> l = new LinkedList<B>();
+  while (xs.hasNext())
+    l.add(f.apply(xs.next()));
+  return l.iterator();
+}
+\end{Verbatim}
+
+Note that this version of map is strict, in the sense that the function
+is applied to every element in the lsit when map is called. As we will
+see, it is also possible to write a lazier verion of map.
+
+map above is a static method and as such is not a first-class value
+in itself. To Achieve this we define a class Map:
+
+\begin{Verbatim}
+public class Map<A,B> 
+        extends Fun2<Fun<A,B>,Iterator<? extends A>,Iterator<B>> {
+   public Iterator<B> apply(Fun<A,B> f, Iterator<? extends A> x) {
+      return map(f, x);
+   }
+   // map function goes here
+}
+\end{Verbatim}
+
+The reason why the code for map is put in a static method and not in
+Map-apply is that we want to be able to use it without having to create
+a new Map object. Using the static import feature from Java 1.5, we 
+can write:
+
+\begin{Verbatim}
+import static Map.map;
+...
+Iterator<String> xs = map(ys);
+...
+\end{Verbatim}
+
+
+\section{Lazy functions}
+
+
+\begin{Verbatim}
+public class LazyMap<A,B> extends Fun2<Fun<A,B>,Iterator<? extends A>,Iterator<B>> {
+   public static <A,B> Iterator<B> lazyMap(Fun<A,B> f, Iterator<? extends A> xs) {
+      return new LazyMapIterator<A,B>(f, xs);
+   }
+   private static class LazyMapIterator<A,B> extends ReadOnlyIterator<B> {
+      private Fun<A,B> f;
+      private Iterator<? extends A> it;
+      public LazyMapIterator(Fun<A,B> f, Iterator<? extends A> it) {
+         this.f = f; this.it = it; }
+      public boolean hasNext() { return it.hasNext(); }
+      public B next() { return f.apply(it.next()); }
+   }
+}
+\end{Verbatim}
+
+\section{Library}
+
+\subsection{Tuples}
+
+The library contains classes for tuples to support some 
+functions, for example zip and unzip.
+
+
+\section{Evaluation}
+
+\subsection{Advantages}
+
+- Doesn't need extensions to syntax or semantics.
+
+\subsection{Disadvantages}
+
+- Syntax can get cumbersome.
+
+- Cannot make polymorpic function instances. If we could, all stateless
+  functions could be made into singleton classes, saving time and space.
+
+- The many different ways of working with sequences (arrays, Collections,
+  Iterator, Enumerator, specialized sequences such as CharSequence) in 
+  Java makes writing general list processing functions diffcult.
+
+
+\section{Conclusions}
+
+It is feasible to implement higher-order functions in Java with 
+parametric polymorphism. 
+
+\bibliographystyle{IEEEtran}
+\bibliography{hoj}
+
+\end{document}
