@@ -1,9 +1,8 @@
-import static fun.Singleton.*;
-import static fun.Size.*;
-import static io.Interact.*;
-
-import fun.*;
 import java.util.Iterator;
+
+import static fun.Singleton.singleton;
+import static fun.Size.size;
+import static io.Interact.interact;
 
 public class wc {
         public static void main(String[] args) {
