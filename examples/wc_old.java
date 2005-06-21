@@ -1,3 +1,5 @@
+package examples;
+
 import java.io.*;
 
 public class wc_old {

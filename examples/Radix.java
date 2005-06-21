@@ -1,3 +1,5 @@
+package examples;
+
 import fun.Fun;
 
 /**
@@ -12,16 +14,14 @@ class Radix {
       return new Fun<Character,Boolean> () {
          public Boolean apply (Character c) {
             n++;
-            return new Boolean('0' <= c.charValue() 
-                               && c.charValue() < '0'+r);
+            return '0' <= c && c < '0' + r;
          }
       };
    }
    
    String test () {
       Fun<Character,Boolean> f = radix(8);
-      return f.apply(new Character('0')) + " " 
-         + f.apply(new Character('9')) + " " + n;
+      return f.apply('0') + " " + f.apply('9') + " " + n;
    }
    
    public static void main (String[] args) {

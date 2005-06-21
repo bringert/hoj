@@ -1,3 +1,5 @@
+package examples;
+
 import fun.*;
 
 public class Contains extends Fun2<String,String,Boolean> {

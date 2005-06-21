@@ -14,7 +14,7 @@ public class Map<A,B>
    }
    
    public static <A,B> Iterator<B> map(Fun<A,B> f, Iterator<? extends A> xs) {
-      LinkedList<B> l = new LinkedList<B>();
+      List<B> l = new LinkedList<B>();
       while (xs.hasNext())
          l.add(f.apply(xs.next()));
       return l.iterator();

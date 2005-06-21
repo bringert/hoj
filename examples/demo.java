@@ -1,3 +1,5 @@
+package examples;
+
 /*
  * Prints the sum of the lengths of its command line arguments.
  */

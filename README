@@ -1,9 +1,9 @@
 Requirements:
 
-- Java 1.5.0 beta, avilable from http://java.sun.com/j2se/1.5.0/
+- Java 1.5.0, available from http://java.sun.com/j2se/1.5.0/
 
 Compiling:
-- Edit Makefile so that JDK15 points to your Java 1.5 install
+
 - Run 'make'
 
 There are some examples in the the examples/ directory.

@@ -1,3 +1,5 @@
+package examples;
+
 import fun.*;
 
 public class StartsWith extends Fun2<String,String,Boolean> {

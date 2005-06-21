@@ -8,7 +8,7 @@ import java.util.Iterator;
 
 import static io.ReadLines.*;
 import static io.Println.*;
-//import static fun.Map.*;
+import static fun.Map.*;
 
 public class Interact extends Fun<Fun<? super Iterator<String>,? extends Iterator<?>>, Unit> {
 
@@ -18,8 +18,10 @@ public class Interact extends Fun<Fun<? super Iterator<String>,? extends Iterato
         }
 
         public static void interact(Fun<? super Iterator<String>,? extends Iterator<?>> f) {
-               new Map<Object,Unit>().apply(println(System.out),f.apply(readLines(System.in)));
-//                map(println(System.out),f.apply(readLines(System.in)));
+                new Map<Object,Unit>().apply(println(System.out),f.apply(readLines(System.in)));
+//                Iterator ls = readLines(System.in);
+//                Iterator<? extends Object> os = f.apply();
+//                map(println(System.out),ls);
         }
 
 }

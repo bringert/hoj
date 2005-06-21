@@ -1,3 +1,5 @@
+package examples;
+
 import java.util.Iterator;
 
 import static fun.Singleton.singleton;

@@ -1,3 +1,5 @@
+package examples;
+
 import fun.*;
 import io.*;
 import java.util.Iterator;
